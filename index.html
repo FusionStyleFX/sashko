@@ -33,8 +33,8 @@
   <div class="wrap">
     <div>
       <div style="text-align:center;margin-bottom:12px">
-        <h1 style="margin:0;font-size:18px">Spanish Flashcards — Simple</h1>
-        <div class="muted">The deck is stored inside this HTML file. Shuffle and enjoy!</div>
+        <h1 style="margin:0;font-size:18px">Spanish Flashcards — Train your mind</h1>
+        <div class="muted">Посветено на моя любознателен приятел Сашко.</div>
       </div>
 
       <div class="card" id="card" tabindex="0" role="button" aria-pressed="false">
@@ -42,7 +42,7 @@
 
           <div class="face front">
             <div class="part" id="part-front"></div>
-            <h2 id="es">Loading…</h2>
+            <h2 id="front-word">Loading…</h2>
             <div class="controls">
               <button id="prev">◀ Prev</button>
               <button id="flip" class="primary">Flip</button>
@@ -52,7 +52,7 @@
 
           <div class="face back">
             <div class="part" id="part-back"></div>
-            <h2 id="bg"></h2>
+            <h2 id="back-word"></h2>
             <div class="controls">
               <button id="again">Again</button>
               <button id="known" class="primary">Known ✓</button>
@@ -65,6 +65,8 @@
       <div class="toolbar" style="margin-top:14px">
         <button id="shuffle">Shuffle</button>
         <button id="random">Random Card</button>
+        <!-- New toggle button -->
+        <button id="switchLang">Switch to Bulgarian</button>
         <div class="muted" id="progress">0 / 0</div>
       </div>
     </div>
@@ -73,7 +75,6 @@
   <script>
     const $ = id => document.getElementById(id);
     let deck = [
-      // Example entry line:
   { "es": "apuntarse", "bg": "записвам се", "part": "глагол" },
   { "es": "inscribirse", "bg": "записвам се", "part": "глагол" },
   { "es": "matricularse", "bg": "записвам се", "part": "глагол" },
@@ -288,10 +289,12 @@
   { "es": "el campo", "bg": "провинция", "part": "съществително" }
     ];
     let index = 0;
+    let isSpanishFront = true; // Default: Spanish on front
 
     function shuffle(a){
       for(let i=a.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
       }
     }
 
@@ -305,19 +308,24 @@
     function render(){
       if(!deck.length) return;
       const card = deck[index];
-      $('es').textContent = card.es;
-      $('bg').textContent = card.bg;
+      if(isSpanishFront){
+        $('front-word').textContent = card.es;
+        $('back-word').textContent = card.bg;
+      } else {
+        $('front-word').textContent = card.bg;
+        $('back-word').textContent = card.es;
+      }
       $('part-front').textContent = card.part || '';
       $('part-back').textContent = card.part || '';
       $('progress').textContent = `${index+1} / ${deck.length}`;
-      document.getElementById('card').classList.remove('is-flipped');
-      document.getElementById('card').setAttribute('aria-pressed','false');
+      $('card').classList.remove('is-flipped');
+      $('card').setAttribute('aria-pressed','false');
     }
 
     // controls
-    $('flip').addEventListener('click', ()=> document.getElementById('card').classList.toggle('is-flipped'));
-    document.getElementById('card').addEventListener('click', (e)=>{
-      if(e.target.tagName !== 'BUTTON') document.getElementById('card').classList.toggle('is-flipped');
+    $('flip').addEventListener('click', ()=> $('card').classList.toggle('is-flipped'));
+    $('card').addEventListener('click', (e)=>{
+      if(e.target.tagName !== 'BUTTON') $('card').classList.toggle('is-flipped');
     });
     $('next').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
     $('prev').addEventListener('click', ()=> { index = (index-1+deck.length) % deck.length; render(); });
@@ -326,12 +334,19 @@
     $('known').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
     $('again').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
 
+    // language switch button
+    $('switchLang').addEventListener('click', ()=>{
+      isSpanishFront = !isSpanishFront;
+      $('switchLang').textContent = isSpanishFront ? "Switch to Bulgarian" : "Switch to Spanish";
+      render();
+    });
+
     // keyboard
     document.addEventListener('keydown', (e)=>{
       if(e.target && (e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA')) return;
       if(e.key === 'ArrowRight') { index = (index+1) % deck.length; render(); }
       if(e.key === 'ArrowLeft') { index = (index-1+deck.length) % deck.length; render(); }
-      if(e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); document.getElementById('card').classList.toggle('is-flipped'); }
+      if(e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); $('card').classList.toggle('is-flipped'); }
     });
 
     initDeck();
