@@ -70,8 +70,15 @@
         <button id="switchLang">Switch to Bulgarian</button>
         <div class="muted" id="progress">0 / 0</div>
       </div>
+      
+      <div class="toolbar">
+  <div class="muted"> Искаш пример с тази дума? Кликни <a id="youglish-link" href="#" target="_blank">ТУК!</a> </div>
+</div>
+      
     </div>
   </div>
+  
+  
 
   <script>
     const $ = id => document.getElementById(id);
@@ -384,22 +391,31 @@
       render();
     }
 
-    function render(){
-      if(!deck.length) return;
-      const card = deck[index];
-      if(isSpanishFront){
-        $('front-word').textContent = card.es;
-        $('back-word').textContent = card.bg;
-      } else {
-        $('front-word').textContent = card.bg;
-        $('back-word').textContent = card.es;
-      }
-      $('part-front').textContent = card.part || '';
-      $('part-back').textContent = card.part || '';
-      $('progress').textContent = `${index+1} / ${deck.length}`;
-      $('card').classList.remove('is-flipped');
-      $('card').setAttribute('aria-pressed','false');
-    }
+function render(){
+  if(!deck.length) return;
+  const card = deck[index];
+  
+  if(isSpanishFront){
+    $('front-word').textContent = card.es;
+    $('back-word').textContent = card.bg;
+    
+    // Update YouGlish link
+    $('youglish-link').href = `https://youglish.com/pronounce/${encodeURIComponent(card.es)}/spanish`;
+  } else {
+    $('front-word').textContent = card.bg;
+    $('back-word').textContent = card.es;
+    
+    // Update YouGlish link to Spanish word anyway
+    $('youglish-link').href = `https://youglish.com/pronounce/${encodeURIComponent(card.es)}/spanish`;
+  }
+  
+  $('part-front').textContent = card.part || '';
+  $('part-back').textContent = card.part || '';
+  $('progress').textContent = `${index+1} / ${deck.length}`;
+  $('card').classList.remove('is-flipped');
+  $('card').setAttribute('aria-pressed','false');
+}
+
 
     // controls
     $('flip').addEventListener('click', ()=> $('card').classList.toggle('is-flipped'));
@@ -432,4 +448,3 @@
   </script>
 </body>
 </html>
-
