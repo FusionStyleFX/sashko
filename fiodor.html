@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Spanish Flashcards — Simple</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071026 0%, #0b1b2b 100%);color:#e6eef8}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+
+    /* Card */
+    .card{width:420px;height:260px;perspective:1000px}
+    .card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.9,.3,1)}
+    .card.is-flipped .card-inner{transform:rotateY(180deg)}
+
+    .face{position:absolute;inset:0;border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    .front h2,.back h2{font-size:36px;margin:6px 0}
+    .part{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .back{transform:rotateY(180deg)}
+
+    .controls{display:flex;gap:10px;margin-top:12px}
+    button{background:rgba(255,255,255,0.03);border:0;padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
+    .primary{background:linear-gradient(90deg,var(--accent),#4f46e5);box-shadow:0 8px 20px rgba(124,58,237,0.12)}
+
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:14px}
+    .muted{color:var(--muted);font-size:13px}
+
+    @media (max-width:480px){.card{width:320px;height:220px}.front h2,.back h2{font-size:28px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <div style="text-align:center;margin-bottom:12px">
+        <h1 style="margin:0;font-size:18px">Spanish Flashcards — Train your mind</h1>
+        <div class="muted">Посветено на моя любознателен приятел Сашко.</div>
+        <div class="muted"> <a href="https://fusionstylefx.github.io/sashko/"> Cervantes Cards </a> </div>
+      </div>
+
+      <div class="card" id="card" tabindex="0" role="button" aria-pressed="false">
+        <div class="card-inner" id="inner">
+
+          <div class="face front">
+            <div class="part" id="part-front"></div>
+            <h2 id="front-word">Loading…</h2>
+            <div class="controls">
+              <button id="prev">◀ Prev</button>
+              <button id="flip" class="primary">Flip</button>
+              <button id="next">Next ▶</button>
+            </div>
+          </div>
+
+          <div class="face back">
+            <div class="part" id="part-back"></div>
+            <h2 id="back-word"></h2>
+            <div class="controls">
+              <button id="again">Again</button>
+              <button id="known" class="primary">Known ✓</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top:14px">
+        <button id="shuffle">Shuffle</button>
+        <button id="random">Random Card</button>
+        <!-- New toggle button -->
+        <button id="switchLang">Switch to Bulgarian</button>
+        <div class="muted" id="progress">0 / 0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let deck = [
+  { "es": "apreciar", "bg": "оценявам", "en": "appreciate", "part": "глагол" },
+  { "es": "recopilación", "bg": "сборник", "en": "collection", "part": "съществително" },
+  { "es": "imprimir", "bg": "принтирам", "en": "print", "part": "глагол" },
+  { "es": "brevedad", "bg": "краткост", "en": "shortness", "part": "съществително" },
+  { "es": "agudo", "bg": "остър", "en": "sharp", "part": "прилагателно" },
+  { "es": "trasladar(se)", "bg": "местя (се)", "en": "move/transfer", "part": "глагол" },
+  { "es": "avaro", "bg": "скъперник, алчен", "en": "greedy, miserly", "part": "прилагателно/съществително" },
+  { "es": "influir", "bg": "влияя", "en": "influence", "part": "глагол" },
+  { "es": "desheredado", "bg": "лишен от наследство", "en": "disinherited", "part": "прилагателно" },
+
+  { "es": "deuda", "bg": "дълг", "en": "debt", "part": "съществително" },
+  { "es": "arruinado/arruinar", "bg": "разорен/разорявам", "en": "ruined/to ruin", "part": "прилагателно/глагол" },
+  { "es": "condenado a muerte", "bg": "осъден на смърт", "en": "sentenced to death", "part": "израз" },
+  { "es": "forzado", "bg": "принуден", "en": "forced", "part": "прилагателно" },
+  { "es": "padecer", "bg": "страдам", "en": "suffer", "part": "глагол" },
+  { "es": "Ella también padecía de tuberculosis", "bg": "Тя също страдаше от туберкулоза", "en": "She also suffered from tuberculosis", "part": "изречение" },
+  { "es": "ausencia", "bg": "отсъствие", "en": "absence", "part": "съществително" },
+  { "es": "asentarse en", "bg": "настанявам се в, заселвам се в", "en": "settle in", "part": "глагол" },
+  { "es": "embarazada", "bg": "бременна", "en": "pregnant", "part": "прилагателно" },
+  { "es": "residir en", "bg": "живея, пребивавам", "en": "reside in", "part": "глагол" },
+  { "es": "el rostro", "bg": "лице", "en": "face", "part": "съществително" },
+  { "es": "bochorno", "bg": "срам, неудобство", "en": "embarrassment", "part": "съществително" },
+  { "es": "cubrir", "bg": "покривам", "en": "cover", "part": "глагол" },
+
+  { "es": "rodilla", "bg": "коляно", "en": "knee", "part": "съществително" },
+  { "es": "júbilo", "bg": "радост", "en": "joy", "part": "съществително" },
+  { "es": "sonrojarse", "bg": "изчервявам се", "en": "blush", "part": "глагол" },
+  { "es": "apretar", "bg": "стискам", "en": "squeeze, tighten", "part": "глагол" },
+  { "es": "disputa", "bg": "кавга", "en": "dispute, quarrel", "part": "съществително" },
+  { "es": "sinnúmero de", "bg": "безброй", "en": "countless", "part": "израз" },
+  { "es": "escoger a", "bg": "избирам", "en": "choose", "part": "глагол" },
+  { "es": "hermosura", "bg": "прелест", "en": "beauty", "part": "съществително" },
+  { "es": "poseer", "bg": "притежавам", "en": "possess", "part": "глагол" },
+  { "es": "agraciado", "bg": "грациозен, атрактивен", "en": "graceful, attractive", "part": "прилагателно" },
+  { "es": "atraer", "bg": "привличам", "en": "attract", "part": "глагол" },
+  { "es": "leal", "bg": "лоялен", "en": "loyal", "part": "прилагателно" },
+  { "es": "pañuelo", "bg": "носка кърпичка", "en": "handkerchief", "part": "съществително" },
+  { "es": "percatarse", "bg": "осъзнавам", "en": "realize, notice", "part": "глагол" },
+  { "es": "pálido", "bg": "блед", "en": "pale", "part": "прилагателно" },
+  { "es": "en verdad", "bg": "всъщност", "en": "actually, indeed", "part": "израз" },
+  { "es": "borrar", "bg": "изтривам", "en": "erase", "part": "глагол" },
+  { "es": "a toda costa", "bg": "на всяка цена", "en": "at all costs", "part": "израз" },
+  { "es": "casta", "bg": "порода, каста", "en": "breed, caste", "part": "съществително" },
+  { "es": "tentación", "bg": "изкушение", "en": "temptation", "part": "съществително" },
+  { "es": "caballero", "bg": "джентълмен", "en": "gentleman, knight", "part": "съществително" },
+  { "es": "exprimir", "bg": "изстисквам", "en": "squeeze, wring", "part": "глагол" }
+    ];
+    let index = 0;
+    let isSpanishFront = true; // Default: Spanish on front
+
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+    }
+
+    function initDeck(){
+      if(!deck.length) return;
+      shuffle(deck);
+      index = Math.floor(Math.random()*deck.length);
+      render();
+    }
+
+    function render(){
+      if(!deck.length) return;
+      const card = deck[index];
+      if(isSpanishFront){
+        $('front-word').textContent = card.es;
+        $('back-word').textContent = card.bg;
+      } else {
+        $('front-word').textContent = card.bg;
+        $('back-word').textContent = card.es;
+      }
+      $('part-front').textContent = card.part || '';
+      $('part-back').textContent = card.part || '';
+      $('progress').textContent = `${index+1} / ${deck.length}`;
+      $('card').classList.remove('is-flipped');
+      $('card').setAttribute('aria-pressed','false');
+    }
+
+    // controls
+    $('flip').addEventListener('click', ()=> $('card').classList.toggle('is-flipped'));
+    $('card').addEventListener('click', (e)=>{
+      if(e.target.tagName !== 'BUTTON') $('card').classList.toggle('is-flipped');
+    });
+    $('next').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
+    $('prev').addEventListener('click', ()=> { index = (index-1+deck.length) % deck.length; render(); });
+    $('shuffle').addEventListener('click', ()=> { shuffle(deck); index = 0; render(); });
+    $('random').addEventListener('click', ()=> { index = Math.floor(Math.random()*deck.length); render(); });
+    $('known').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
+    $('again').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
+
+    // language switch button
+    $('switchLang').addEventListener('click', ()=>{
+      isSpanishFront = !isSpanishFront;
+      $('switchLang').textContent = isSpanishFront ? "Switch to Bulgarian" : "Switch to Spanish";
+      render();
+    });
+
+    // keyboard
+    document.addEventListener('keydown', (e)=>{
+      if(e.target && (e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA')) return;
+      if(e.key === 'ArrowRight') { index = (index+1) % deck.length; render(); }
+      if(e.key === 'ArrowLeft') { index = (index-1+deck.length) % deck.length; render(); }
+      if(e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); $('card').classList.toggle('is-flipped'); }
+    });
+
+    initDeck();
+  </script>
+</body>
+</html>
