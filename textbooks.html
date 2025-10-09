@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish‘s aim to learn — Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Основни настройки */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffafbd, #ffc3a0);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        a.button {
+            display: inline-block;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        a.button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        }
+
+        .footer-link {
+            margin-top: 40px;
+            font-size: 1.2rem;
+            color: #fff;
+            text-decoration: underline;
+            transition: 0.3s;
+        }
+
+        .footer-link:hover {
+            color: #000;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            a.button {
+                font-size: 1.2rem;
+                padding: 15px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Biblioteca de Español B2</h1>
+    <div class="button-container">
+        <a class="button" href="https://github.com/FusionStyleFX/sashko/raw/main/B2-book-compressed.pdf" target="_blank">
+            Español en marcha 4 Nueva edición
+        </a>
+        <a class="button" href="https://github.com/FusionStyleFX/sashko/raw/main/B2-others.pdf" target="_blank">
+            Materiales adicionales
+        </a>
+    </div>
+    <a class="footer-link" href="https://fusionstylefx.github.io/sashko/" target="_blank">
+        ← Volver a la página principal
+    </a>
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Spanish‘s aim to learn — Flashcards</title>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/FusionStyleFX/sashko/main/spain.png">
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071026 0%, #0b1b2b 100%);color:#e6eef8}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+
+    /* Card */
+    .card{width:420px;height:260px;perspective:1000px}
+    .card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.9,.3,1)}
+    .card.is-flipped .card-inner{transform:rotateY(180deg)}
+
+    .face{position:absolute;inset:0;border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    .front h2,.back h2{font-size:36px;margin:6px 0}
+    .part{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .back{transform:rotateY(180deg)}
+
+    .controls{display:flex;gap:10px;margin-top:12px}
+    button{background:rgba(255,255,255,0.03);border:0;padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
+    .primary{background:linear-gradient(90deg,var(--accent),#4f46e5);box-shadow:0 8px 20px rgba(124,58,237,0.12)}
+
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:14px}
+    .muted{color:var(--muted);font-size:13px}
+
+    @media (max-width:480px){.card{width:320px;height:220px}.front h2,.back h2{font-size:28px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <div style="text-align:center;margin-bottom:12px">
+        <h1 style="margin:0;font-size:18px">Spanish‘s aim to learn — Flashcards</h1>
+        <div class="muted">Посветено на моя любознателен приятел Сашко.</div>
+        <div class="muted"> <a href="https://fusionstylefx.github.io/sashko/fiodor.html"> Флашкарти на Достоевски </a> </div>
+      </div>
+
+      <div class="card" id="card" tabindex="0" role="button" aria-pressed="false">
+        <div class="card-inner" id="inner">
+
+          <div class="face front">
+            <div class="part" id="part-front"></div>
+            <h2 id="front-word">Loading…</h2>
+            <div class="controls">
+              <button id="prev">◀ Prev</button>
+              <button id="flip" class="primary">Flip</button>
+              <button id="next">Next ▶</button>
+            </div>
+          </div>
+
+          <div class="face back">
+            <div class="part" id="part-back"></div>
+            <h2 id="back-word"></h2>
+            <div class="controls">
+              <button id="again">Again</button>
+              <button id="known" class="primary">Known ✓</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top:14px">
+        <button id="shuffle">Shuffle</button>
+        <button id="random">Random Card</button>
+        <!-- New toggle button -->
+        <button id="switchLang">Switch to Bulgarian</button>
+        <div class="muted" id="progress">0 / 0</div>
+      </div>
+      
+      <div class="toolbar">
+  <div class="muted"> Искаш пример с тази дума? Кликни <a id="youglish-link" href="#" target="_blank">ТУК!</a> </div>
+</div>
+      
+    </div>
+  </div>
+  
+  
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let deck = [
+  { "es": "apuntarse", "bg": "записвам се", "part": "глагол" },
+  { "es": "inscribirse", "bg": "записвам се", "part": "глагол" },
+  { "es": "matricularse", "bg": "записвам се", "part": "глагол" },
+
+  { "es": "parchís", "bg": "не се сърди човече", "part": "съществително" },
+  { "es": "las prendas", "bg": "дрехи", "part": "съществително" },
+  { "es": "la ropa", "bg": "дрехи", "part": "съществително" },
+  { "es": "sobre todo", "bg": "най-вече", "part": "израз" },
+  { "es": "mediante", "bg": "посредством, чрез", "part": "предлог" },
+  { "es": "una actividad de entretenimiento", "bg": "развлекателна дейност", "part": "съществително словосъчетание" },
+  { "es": "a la venta", "bg": "на разположение, в продажба", "part": "израз" },
+  { "es": "la tapa de un libro", "bg": "корица на книга", "part": "съществително словосъчетание" },
+
+  { "es": "pegar", "bg": "бия се, лепя", "part": "глагол" },
+  { "es": "recortar", "bg": "изрязвам", "part": "глагол" },
+  { "es": "aire", "bg": "въздух, облик", "part": "съществително" },
+  { "es": "cinta adhesiva", "bg": "тиксо", "part": "съществително" },
+
+  { "es": "¿Cómo te encuentras?", "bg": "Как се чувстваш?", "part": "израз" },
+  { "es": "sentirse", "bg": "чувствам се", "part": "глагол" },
+  { "es": "definitivo", "bg": "постоянен", "part": "прилагателно" },
+  { "es": "recorrer el mundo", "bg": "обикалям света", "part": "глаголен израз" },
+  { "es": "un empleo", "bg": "работа", "part": "съществително" },
+  { "es": "dar el primer paso", "bg": "правя първата стъпка", "part": "израз" },
+  { "es": "algo de dinero", "bg": "с някакви пари", "part": "съществително словосъчетание" },
+  { "es": "asombrarse", "bg": "учудвам се", "part": "глагол" },
+  { "es": "asombro", "bg": "учуда", "part": "съществително" },
+  { "es": "vocacional", "bg": "професионален", "part": "прилагателно" },
+  { "es": "agobiarse", "bg": "притеснявам се (по-силно)", "part": "глагол" },
+  { "es": "preocuparse", "bg": "притеснявам се", "part": "глагол" },
+  { "es": "agobio", "bg": "тревога, притеснение", "part": "съществително" },
+  { "es": "cabezoto", "bg": "твърдоглав", "part": "прилагателно" },
+  { "es": "campamento de verano", "bg": "летен лагер", "part": "съществително" },
+  { "es": "equilibrio", "bg": "баланс", "part": "съществително" },
+  { "es": "voluntariado", "bg": "доброволчество", "part": "съществително" },
+
+  { "es": "no tener ni un duro", "bg": "нямам никакви пари", "part": "идиом" },
+  { "es": "no tener mucha pasta", "bg": "нямам много пари", "part": "идиом" },
+  { "es": "no tener mucho dinero", "bg": "нямам много пари", "part": "идиом" },
+  { "es": "estoy peleado", "bg": "скаран съм", "part": "израз" },
+
+  { "es": "trueque", "bg": "бартер", "part": "съществително" },
+  { "es": "tatuarse", "bg": "татуирам се", "part": "глагол" },
+  { "es": "tatuaje", "bg": "татуировка", "part": "съществително" },
+
+  { "es": "asesorar", "bg": "съветвам", "part": "глагол" },
+  { "es": "el abogado asesora a sus clientes", "bg": "адвокатът съветва клиентите си", "part": "примерно изречение" },
+  { "es": "aconsejar", "bg": "съветвам", "part": "глагол" },
+  { "es": "un amigo te aconseja", "bg": "приятел те съветва", "part": "примерно изречение" },
+
+  { "es": "universitario", "bg": "студент в университет", "part": "съществително/прилагателно" },
+  { "es": "integrante", "bg": "участник", "part": "съществително" },
+  { "es": "impulsar", "bg": "стимулирам", "part": "глагол" },
+  { "es": "entregar", "bg": "връчвам, предавам", "part": "глагол" },
+
+  { "es": "revista", "bg": "списание", "part": "съществително" },
+  { "es": "abismo", "bg": "пропаст, бездна", "part": "съществително" },
+  { "es": "dato", "bg": "данни, информация", "part": "съществително" },
+  { "es": "destacar", "bg": "отбелязвам, подчертавам", "part": "глагол" },
+
+  { "es": "taller", "bg": "работилница", "part": "съществително" },
+  { "es": "coleta", "bg": "опашка (прическа)", "part": "съществително" },
+  { "es": "asistir", "bg": "присъствам", "part": "глагол" },
+  { "es": "enunciado", "bg": "твърдение", "part": "съществително" },
+  { "es": "actuación", "bg": "изпълнение", "part": "съществително" },
+  { "es": "avisar", "bg": "уведомявам", "part": "глагол" },
+  { "es": "inauguración", "bg": "откриване", "part": "съществително" },
+  { "es": "la inauguración de un restaurante", "bg": "откриването на ресторант", "part": "примерно изречение" },
+
+  { "es": "norma", "bg": "правило", "part": "съществително" },
+  { "es": "selección", "bg": "конкурс, подбор", "part": "съществително" },
+  { "es": "ocuparse de alguien", "bg": "грижа се за някого", "part": "глаголен израз" },
+  { "es": "cuidar a", "bg": "грижа се за", "part": "глагол" },
+  { "es": "a partir de", "bg": "от, започвайки от", "part": "израз" },
+  { "es": "a partir de los 8 años", "bg": "от 8-годишна възраст", "part": "израз" },
+  { "es": "poner la tele", "bg": "включвам телевизора", "part": "глаголен израз" },
+  { "es": "quitar la tele", "bg": "изключвам телевизора", "part": "глаголен израз" },
+  { "es": "encender", "bg": "включвам", "part": "глагол" },
+  { "es": "apagar", "bg": "изключвам", "part": "глагол" },
+  { "es": "(des)enchufar", "bg": "пъхам/включвам в контакт", "part": "глагол" },
+  { "es": "corriente", "bg": "ток", "part": "съществително" },
+  { "es": "tener enchufe", "bg": "имам връзки", "part": "идиом" },
+  { "es": "enchufe", "bg": "контакт", "part": "съществително" },
+  { "es": "no cabe ninguna duda", "bg": "няма никакво съмнение", "part": "идиом" },
+  { "es": "cautivo", "bg": "затворник", "part": "съществително" },
+  { "es": "prisionero", "bg": "затворник", "part": "съществително" },
+  { "es": "prisión", "bg": "затвор", "part": "съществително" },
+  { "es": "cárcel", "bg": "затвор", "part": "съществително" },
+  { "es": "ingenioso", "bg": "остроумен, изобретателен", "part": "прилагателно" },
+
+  { "es": "arrancar", "bg": "паля кола", "part": "глагол" },
+  { "es": "golpear", "bg": "удрям, бия", "part": "глагол" },
+  { "es": "pegar", "bg": "удрям, бия", "part": "глагол" },
+  { "es": "solidario", "bg": "солидарен", "part": "прилагателно" },
+  { "es": "tajantemente", "bg": "категорично", "part": "наречие" },
+  { "es": "negar", "bg": "отказвам, отхвърлям", "part": "глагол" },
+  { "es": "niego tajantemente", "bg": "категорично отказвам", "part": "израз" },
+
+  { "es": "cambiar de acera", "bg": "отивам на другия тротоар", "part": "глаголен израз" },
+  { "es": "hacer socio", "bg": "ставам член", "part": "глаголен израз" },
+  { "es": "timbre", "bg": "звънец", "part": "съществително" },
+  { "es": "llamar al timbre", "bg": "звъня на звънеца", "part": "глаголен израз" },
+  { "es": "deber", "bg": "дължа", "part": "глагол" },
+  { "es": "el dinero que te debe", "bg": "парите, които ти дължи", "part": "примерно изречение" },
+  { "es": "acabar un trabajo por alguien", "bg": "свършвам работа за някого", "part": "глаголен израз" },
+  { "es": "de mala gana", "bg": "неохотно", "part": "израз" },
+  { "es": "poner alguna excusa", "bg": "давам оправдание", "part": "глаголен израз" },
+  { "es": "ala", "bg": "крило", "part": "съществително" },
+  { "es": "pasar de largo", "bg": "подминавам (игнорирам)", "part": "глаголен израз" },
+
+  { "es": "¿Cuánto pesas?", "bg": "Колко тежиш?", "part": "въпрос" },
+  { "es": "medir", "bg": "измервам, висок съм", "part": "глагол" },
+  { "es": "mido 1.70", "bg": "Висок съм 1.70", "part": "примерно изречение" },
+  { "es": "¿Cuánto mides?", "bg": "Колко си висок?", "part": "въпрос" },
+  { "es": "enano", "bg": "джудже", "part": "съществително" },
+  { "es": "entretenerse", "bg": "забавлявам се", "part": "глагол" },
+  { "es": "divertirse", "bg": "забавлявам се", "part": "глагол" },
+  { "es": "diversión", "bg": "забавление", "part": "съществително" },
+  { "es": "entretenimiento", "bg": "развлечение", "part": "съществително" },
+
+  { "es": "¿Qué número gastas?", "bg": "Какъв номер обувки носиш?", "part": "въпрос" },
+  { "es": "ingresar", "bg": "внасям, постъпвам", "part": "глагол" },
+  { "es": "ingreso", "bg": "приход", "part": "съществително" },
+  { "es": "ingreso dinero en el banco", "bg": "вкарвам пари в банката", "part": "примерно изречение" },
+  { "es": "regresar", "bg": "завръщам се", "part": "глагол" },
+  { "es": "me da vergüenza", "bg": "срам ме е", "part": "израз" },
+  { "es": "eres sin vergüenza", "bg": "безсрамник си", "part": "израз" },
+  { "es": "fallecer", "bg": "почивам (умирам)", "part": "глагол" },
+  { "es": "fallecimiento", "bg": "смърт (официално)", "part": "съществително" },
+  { "es": "fecha de fallecimiento", "bg": "дата на смърт", "part": "съществително словосъчетание" },
+
+  { "es": "me haces reír", "bg": "караш ме да се смея", "part": "израз" },
+  { "es": "burlarse", "bg": "подигравам се", "part": "глагол" },
+  { "es": "burlonamente", "bg": "подигравателно", "part": "наречие" },
+  { "es": "dirigir", "bg": "управлявам", "part": "глагол" },
+  { "es": "advertir", "bg": "предупреждавам", "part": "глагол" },
+  { "es": "advertencia", "bg": "предупреждение", "part": "съществително" },
+  { "es": "avisar", "bg": "уведомявам", "part": "глагол" },
+  { "es": "pelea", "bg": "бой, скандал", "part": "съществително" },
+  { "es": "reñir", "bg": "карам се", "part": "глагол" },
+  { "es": "echar una bronca", "bg": "карам се", "part": "глаголен израз" },
+  { "es": "echar la bronca", "bg": "карам се", "part": "глаголен израз" },
+
+  { "es": "un día para el otro", "bg": "от днес за утре", "part": "израз" },
+  { "es": "la sensación de", "bg": "усещането за", "part": "съществително словосъчетание" },
+  { "es": "agotado", "bg": "изтощен", "part": "прилагателно" },
+  { "es": "además de", "bg": "освен", "part": "израз" },
+  { "es": "la tienda de campaña", "bg": "палатка", "part": "съществително" },
+
+  { "es": "tirar para adelante", "bg": "продължавам напред", "part": "глаголен израз" },
+  { "es": "en solitario", "bg": "в самота", "part": "израз" },
+  { "es": "indispensable", "bg": "много необходим", "part": "прилагателно" },
+  { "es": "relato", "bg": "разказ, история", "part": "съществително" },
+  { "es": "no hay marcha atrás", "bg": "няма връщане назад", "part": "идиом" },
+
+  { "es": "aprobación", "bg": "одобрение", "part": "съществително" },
+  { "es": "murmullo", "bg": "шушукане", "part": "съществително" },
+  { "es": "aportar", "bg": "допринасям", "part": "глагол" },
+  { "es": "contribuir", "bg": "допринасям", "part": "глагол" },
+  { "es": "tener algo que decir", "bg": "има какво да каже", "part": "израз" },
+  { "es": "rizado", "bg": "къдрав", "part": "прилагателно" },
+  { "es": "la piel oscura", "bg": "тъмна кожа", "part": "съществително словосъчетание" },
+  { "es": "ancha", "bg": "широк", "part": "прилагателно" },
+  { "es": "carbón", "bg": "въглен", "part": "съществително" },
+  { "es": "pizarra", "bg": "училищна дъска", "part": "съществително" },
+  { "es": "rasgo", "bg": "черта (характеристика)", "part": "съществително" },
+  { "es": "en pie de guerra", "bg": "в готовност за битка/предизвикателство", "part": "идиом" },
+  { "es": "reto", "bg": "предизвикателство", "part": "съществително" },
+  { "es": "desafío", "bg": "предизвикателство", "part": "съществително" },
+
+  { "es": "barrer", "bg": "мета", "part": "глагол" },
+  { "es": "barrendero", "bg": "метач", "part": "съществително" },
+  { "es": "escoba", "bg": "метла", "part": "съществително" },
+  { "es": "recogedor", "bg": "лопатка (за боклук)", "part": "съществително" },
+  { "es": "pala", "bg": "лопата", "part": "съществително" },
+
+  { "es": "tengo sueño", "bg": "спи ми се", "part": "израз" },
+  { "es": "tengo un sueño", "bg": "имам мечта", "part": "израз" },
+  { "es": "sueño contigo", "bg": "мечтая с теб", "part": "израз" },
+  { "es": "sueño en ti", "bg": "мечтая за теб", "part": "израз" },
+  { "es": "cometer un error", "bg": "допускам грешка", "part": "глаголен израз" },
+  { "es": "equivocarse", "bg": "греша", "part": "глагол" },
+  { "es": "equivocación", "bg": "грешка", "part": "съществително" },
+  { "es": "afirmar", "bg": "твърдя", "part": "глагол" },
+  { "es": "ama de casa", "bg": "домакиня", "part": "съществително" },
+  { "es": "estar en paro", "bg": "безработен", "part": "израз" },
+  { "es": "estar parado/a", "bg": "безработен", "part": "израз" },
+  { "es": "estar desempleado", "bg": "безработен", "part": "израз" },
+  { "es": "una vida atípica", "bg": "нетипичен живот", "part": "съществително словосъчетание" },
+  { "es": "bucear", "bg": "гмуркам се", "part": "глагол" },
+  { "es": "trébol", "bg": "четирилистна детелина", "part": "съществително" },
+
+  { "es": "atrapar", "bg": "падам в капан", "part": "глагол" },
+  { "es": "extraviar", "bg": "отклонявам се", "part": "глагол" },
+  { "es": "rumbo", "bg": "посока", "part": "съществително" },
+  { "es": "reflexionar", "bg": "разсъждавам", "part": "глагол" },
+  { "es": "estallar", "bg": "избухвам", "part": "глагол" },
+  { "es": "empantanar(se)", "bg": "вглъбявам се", "part": "глагол" },
+  { "es": "calmar(se)", "bg": "успокоявам се", "part": "глагол" },
+  { "es": "tranquilizar(se)", "bg": "успокоявам се", "part": "глагол" },
+  { "es": "supersticioso", "bg": "суеверен", "part": "прилагателно" },
+
+  { "es": "conmocionar", "bg": "разтърсвам (емоционално)", "part": "глагол" },
+  { "es": "subsistir", "bg": "преживявам, оцелявам", "part": "глагол" },
+  { "es": "trabajar de sol a sol", "bg": "работя от изгрев до залез", "part": "идиом" },
+  { "es": "analfabeto", "bg": "неграмотен", "part": "прилагателно/съществително" },
+  { "es": "herencia", "bg": "наследство", "part": "съществително" },
+  { "es": "heredar", "bg": "наследявам", "part": "глагол" },
+  { "es": "percibir", "bg": "получавам (финансово)", "part": "глагол" },
+  { "es": "recibir", "bg": "получавам", "part": "глагол" },
+  { "es": "la mayoría de edad", "bg": "пълнолетие", "part": "съществително словосъчетание" },
+  { "es": "el campo", "bg": "провинция", "part": "съществително" },
+  
+  
+  
+  { "es": "conocerse mejor", "bg": "по-добре да се опозная", "part": "глагол/израз" },
+  { "es": "cuadro", "bg": "картина", "part": "съществително" },
+  { "es": "neurótico", "bg": "невротичен", "part": "прилагателно" },
+  { "es": "neurasténico", "bg": "неврастеничен", "part": "прилагателно" },
+  { "es": "desobediente", "bg": "непослушен", "part": "прилагателно" },
+  { "es": "insensato", "bg": "безразсъден", "part": "прилагателно" },
+  { "es": "cumplidor", "bg": "отговорен/с изпълнение", "part": "прилагателно" },
+  { "es": "retraído", "bg": "затворен/срамежлив", "part": "прилагателно" },
+  { "es": "rebelde", "bg": "бунтовен", "part": "прилагателно" },
+  { "es": "cobarde", "bg": "страхлив", "part": "прилагателно" },
+  { "es": "aprensivo", "bg": "тревожен/опаслив", "part": "прилагателно" },
+  { "es": "encantador", "bg": "очарователен", "part": "прилагателно" },
+  { "es": "entrevistar", "bg": "интервюирам", "part": "глагол" },
+  { "es": "sentimiento", "bg": "чувство/сензация", "part": "съществително" },
+  { "es": "erróneo", "bg": "погрешен", "part": "прилагателно" },
+  { "es": "escasamente", "bg": "едва", "part": "наречие" },
+  { "es": "propenso a", "bg": "склонен към", "part": "израз/прилагателно" },
+  { "es": "puntuar", "bg": "оценявам/оценка", "part": "глагол" },
+  { "es": "colocar", "bg": "поставям", "part": "глагол" },
+  { "es": "señalar a", "bg": "посочвам към", "part": "глагол" },
+  { "es": "envenenar a", "bg": "отравям", "part": "глагол" },
+  { "es": "somnífero", "bg": "средство за сън", "part": "съществително" },
+  { "es": "denunciar", "bg": "декларирам/сигнализирам", "part": "глагол" },
+  { "es": "ya caigo", "bg": "разбирам вече", "part": "израз" },
+  { "es": "verter", "bg": "изливам", "part": "глагол" },
+  { "es": "residuo", "bg": "остатък", "part": "съществително" },
+  { "es": "panadería", "bg": "пекарна", "part": "съществително" },
+  { "es": "abrigo", "bg": "палто", "part": "съществително" },
+  { "es": "cuerda", "bg": "въже", "part": "съществително" },
+  { "es": "agarrar", "bg": "хващам", "part": "глагол" },
+  { "es": "atravesar", "bg": "пресичам/пробивам", "part": "глагол" },
+  { "es": "saltar", "bg": "скачам", "part": "глагол" },
+  { "es": "sujetar", "bg": "държа/закрепвам", "part": "глагол" },
+  { "es": "instalarse en", "bg": "настанявам се в", "part": "глагол/израз" },
+  { "es": "rodar una película", "bg": "снимам филм", "part": "глагол/израз" },
+  { "es": "acudir a", "bg": "отивам на", "part": "глагол/израз" },
+  { "es": "estrenar", "bg": "премиерно представям/нося за първи път", "part": "глагол" },
+  { "es": "pantallas", "bg": "екрани", "part": "съществително" },
+  { "es": "tuvo una buena acogida", "bg": "получи добро посрещане", "part": "израз" },
+  { "es": "taquilla", "bg": "каса", "part": "съществително" },
+  { "es": "barrunto", "bg": "подозрение", "part": "съществително" },
+  { "es": "presentimiento", "bg": "предчувствие", "part": "съществително" },
+  { "es": "prolegómenos", "bg": "въведение/пролог", "part": "съществително" },
+  { "es": "delegación", "bg": "делегация", "part": "съществително" },
+  { "es": "saboreo", "bg": "наслаждавам се на вкус", "part": "глагол/съществително" },
+  { "es": "abrir brechas", "bg": "правя пробиви", "part": "глагол/израз" },
+  { "es": "paraje", "bg": "място/спот", "part": "съществително" },
+  { "es": "acontecimiento", "bg": "събитие", "part": "съществително" },
+  { "es": "hacer cola", "bg": "чакaм на опашка", "part": "глагол/израз" },
+  { "es": "contemplación", "bg": "съзерцание", "part": "съществително" },
+  { "es": "incidencias", "bg": "инциденти/прояви", "part": "съществително" },
+  { "es": "cartelera", "bg": "афиш/разписание на събития", "part": "съществително" },
+  
+  { "es": "cotidiano", "bg": "ежедневен", "part": "прилагателно" },
+  { "es": "guardar cama", "bg": "да стоя в легло", "part": "глагол/израз" },
+  { "es": "proporcionar", "bg": "осигурявам/предоставям", "part": "глагол" },
+  { "es": "acceso a", "bg": "достъп до", "part": "съществително/израз" },
+  { "es": "violencia de género", "bg": "домашно/полово насилие", "part": "съществително" },
+  { "es": "impartir", "bg": "преподавам/предавам", "part": "глагол" },
+  { "es": "menospreciar", "bg": "подценявам", "part": "глагол" },
+  { "es": "callejero", "bg": "уличен", "part": "прилагателно" },
+  { "es": "guardería", "bg": "ясла", "part": "съществително" },
+  { "es": "emitir", "bg": "излъчвам", "part": "глагол" },
+  { "es": "resulta que", "bg": "оказва се, че", "part": "израз" },
+  { "es": "me resulta fácil", "bg": "намирам го за лесно", "part": "израз" },
+  { "es": "compañía de seguros", "bg": "застрахователна компания", "part": "съществително" },
+  { "es": "todo riesgo", "bg": "пълно авто каско", "part": "съществително/израз" },
+  { "es": "en cuanto a", "bg": "по отношение на", "part": "израз" },
+  { "es": "infusión", "bg": "запарка/чай", "part": "съществително" },
+  { "es": "menta poleo", "bg": "мента чай", "part": "съществително" },
+  { "es": "belleza", "bg": "красота", "part": "съществително" },
+  { "es": "fiarse de", "bg": "доверявам се на", "part": "глагол/израз" },
+  { "es": "mantecado", "bg": "масленка/сладка", "part": "съществително" },
+  { "es": "harina", "bg": "брашно", "part": "съществително" },
+  { "es": "almendra", "bg": "бадем", "part": "съществително" },
+  { "es": "esperanza de vida", "bg": "продължителност на живот", "part": "съществително" },
+  { "es": "avance", "bg": "напредък", "part": "съществително" },
+  { "es": "hay avances en la medicina", "bg": "Има напредък в медицината", "part": "изречение" },
+  { "es": "fuente de información", "bg": "източник на информация", "part": "съществително" },
+  { "es": "(acceso a) medicamentos", "bg": "лекарства", "part": "съществително" },
+  { "es": "curandero", "bg": "лечител", "part": "съществително" },
+  { "es": "intervención", "bg": "операция (в хирургия)", "part": "съществително" },
+  { "es": "hecho", "bg": "факт", "part": "съществително" },
+  { "es": "eficaz", "bg": "ефикасен", "part": "прилагателно" },
+  { "es": "vacuna", "bg": "ваксина", "part": "съществително" },
+  { "es": "prevenir enfermedades", "bg": "предотвратявам болести", "part": "глагол" },
+  { "es": "el avance tecnológico", "bg": "технологически напредък", "part": "съществително" },
+
+  { "es": "falacia", "bg": "заблуда", "part": "съществително" },
+  { "es": "compatriota", "bg": "сънародник", "part": "съществително" },
+  { "es": "patria", "bg": "родина", "part": "съществително" },
+  { "es": "acerca de", "bg": "по отношение на", "part": "израз" },
+  { "es": "atajo", "bg": "пряк път", "part": "съществително" },
+  { "es": "prejuicio", "bg": "предразсъдък", "part": "съществително" },
+  { "es": "Europa occidental/de occidente", "bg": "Западна Европа", "part": "съществително" },
+  { "es": "Europa oriental/de oriente", "bg": "Източна Европа", "part": "съществително" },
+  { "es": "delincuencia", "bg": "престъпност", "part": "съществително" },
+  { "es": "la tesis", "bg": "дипломна работа", "part": "съществително" },
+  { "es": "veneno", "bg": "отрова", "part": "съществително" },
+  { "es": "arbusto", "bg": "храст", "part": "съществително" },
+  { "es": "tremendo", "bg": "ужасен", "part": "прилагателно" },
+  { "es": "ropa de abrigo", "bg": "дебели дрехи", "part": "съществително" },
+  { "es": "abrigar", "bg": "обличам се дебело", "part": "глагол" },
+  { "es": "salvar", "bg": "спасявам", "part": "глагол" },
+  { "es": "quieto", "bg": "спокоен, мирен", "part": "прилагателно" },
+  { "es": "estar quieto", "bg": "стоя мирно", "part": "израз" },
+  { "es": "enseres = pertenencias", "bg": "вещи", "part": "съществително" },
+  { "es": "ostras", "bg": "по дяволите", "part": "междуметие" },
+  { "es": "amontonar", "bg": "натрупвам", "part": "глагол" },
+  { "es": "zarzuela", "bg": "оперета", "part": "съществително" },
+  { "es": "dar a luz", "bg": "раждам", "part": "глагол" },
+  
+  { "es": "engordar", "bg": "напълнявам", "part": "глагол" },
+  { "es": "adelgazar", "bg": "отслабвам", "part": "глагол" },
+  { "es": "muñeco de nieve", "bg": "снежен човек", "part": "съществително" },
+  { "es": "un homenaje", "bg": "в чест на", "part": "израз" },
+  { "es": "acoger", "bg": "приемам", "part": "глагол" },
+  { "es": "arrasar", "bg": "помитам (фигуративно: с успех)", "part": "глагол" },
+  { "es": "alternar", "bg": "съчетавам", "part": "глагол" },
+
+  { "es": "atar", "bg": "връзвам, завръзвам", "part": "глагол" },
+  { "es": "recaudar", "bg": "събирам средства", "part": "глагол" },
+  { "es": "sabio", "bg": "мъдър", "part": "прилагателно" },
+  { "es": "sabiduría", "bg": "мъдрост", "part": "съществително" },
+  { "es": "prescindir de", "bg": "мога без...", "part": "глаголен израз" },
+  { "es": "no puedo prescindir de mi teléfono", "bg": "не мога без телефона си", "part": "изречение" },
+  { "es": "patinete electrónico", "bg": "електрическа тротинетка", "part": "съществително" },
+  { "es": "ratón", "bg": "мишка", "part": "съществително" },
+  { "es": "almacenar", "bg": "складирам", "part": "глагол" },
+  { "es": "congelador", "bg": "фризер", "part": "съществително" },
+  { "es": "congelar", "bg": "замръзвам", "part": "глагол" },
+
+  { "es": "quemar calorías", "bg": "горя калории", "part": "глаголен израз" },
+  { "es": "asemejarse a", "bg": "наподобявам, прилича на", "part": "глаголен израз" },
+  { "es": "sumergirse", "bg": "подлагам се на", "part": "глагол" },
+  { "es": "admitir", "bg": "признавам, допускам", "part": "глагол" },
+  { "es": "invadir", "bg": "превземам", "part": "глагол" },
+  { "es": "relaciones estrechas", "bg": "много близки отношения", "part": "израз" },
+  { "es": "aislarse", "bg": "изолирам се", "part": "глагол" },
+  { "es": "contestador automático", "bg": "гласова поща", "part": "съществително" },
+  { "es": "olla", "bg": "тенджера", "part": "съществително" },
+  { "es": "sartén", "bg": "тиган", "part": "съществително" },
+  { "es": "cazuela", "bg": "гювеч", "part": "съществително" },
+  { "es": "cazo", "bg": "малка тенджера, черпак", "part": "съществително" },
+  { "es": "placa", "bg": "плоча", "part": "съществително" },
+  { "es": "jarrón", "bg": "ваза", "part": "съществително" },
+  { "es": "batidora", "bg": "миксер", "part": "съществително" },
+  { "es": "asar", "bg": "печа", "part": "глагол" },
+  { "es": "lavabo", "bg": "мивка в баня", "part": "съществително" },
+  { "es": "lavar", "bg": "мия", "part": "глагол" },
+
+  { "es": "congregar a", "bg": "събират се", "part": "глаголен израз" },
+  { "es": "presencial", "bg": "лице в лице", "part": "прилагателно" },
+  { "es": "una reunión presencial", "bg": "среща лице в лице", "part": "израз" },
+  { "es": "recordatorio", "bg": "напомняне", "part": "съществително" },
+  { "es": "muñeca", "bg": "кукла, китка", "part": "съществително" },
+  { "es": "dispositivo", "bg": "устройство", "part": "съществително" },
+  { "es": "dispositivo electrónico", "bg": "електронно устройство", "part": "съществително" },
+  { "es": "utensilio", "bg": "уред", "part": "съществително" }
+    ];
+    let index = 0;
+    let isSpanishFront = true; // Default: Spanish on front
+
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+    }
+
+    function initDeck(){
+      if(!deck.length) return;
+      shuffle(deck);
+      index = Math.floor(Math.random()*deck.length);
+      render();
+    }
+
+function render(){
+  if(!deck.length) return;
+  const card = deck[index];
+  
+  if(isSpanishFront){
+    $('front-word').textContent = card.es;
+    $('back-word').textContent = card.bg;
+    
+    // Update YouGlish link
+    $('youglish-link').href = `https://youglish.com/pronounce/${encodeURIComponent(card.es)}/spanish`;
+  } else {
+    $('front-word').textContent = card.bg;
+    $('back-word').textContent = card.es;
+    
+    // Update YouGlish link to Spanish word anyway
+    $('youglish-link').href = `https://youglish.com/pronounce/${encodeURIComponent(card.es)}/spanish`;
+  }
+  
+  $('part-front').textContent = card.part || '';
+  $('part-back').textContent = card.part || '';
+  $('progress').textContent = `${index+1} / ${deck.length}`;
+  $('card').classList.remove('is-flipped');
+  $('card').setAttribute('aria-pressed','false');
+}
+
+
+    // controls
+    $('flip').addEventListener('click', ()=> $('card').classList.toggle('is-flipped'));
+    $('card').addEventListener('click', (e)=>{
+      if(e.target.tagName !== 'BUTTON') $('card').classList.toggle('is-flipped');
+    });
+    $('next').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
+    $('prev').addEventListener('click', ()=> { index = (index-1+deck.length) % deck.length; render(); });
+    $('shuffle').addEventListener('click', ()=> { shuffle(deck); index = 0; render(); });
+    $('random').addEventListener('click', ()=> { index = Math.floor(Math.random()*deck.length); render(); });
+    $('known').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
+    $('again').addEventListener('click', ()=> { index = (index+1) % deck.length; render(); });
+
+    // language switch button
+    $('switchLang').addEventListener('click', ()=>{
+      isSpanishFront = !isSpanishFront;
+      $('switchLang').textContent = isSpanishFront ? "Switch to Bulgarian" : "Switch to Spanish";
+      render();
+    });
+
+    // keyboard
+    document.addEventListener('keydown', (e)=>{
+      if(e.target && (e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA')) return;
+      if(e.key === 'ArrowRight') { index = (index+1) % deck.length; render(); }
+      if(e.key === 'ArrowLeft') { index = (index-1+deck.length) % deck.length; render(); }
+      if(e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); $('card').classList.toggle('is-flipped'); }
+    });
+
+    initDeck();
+  </script>
+</body>
+</html>
