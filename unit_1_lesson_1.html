@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Las maravillas del Perú — Historia interactiva</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --muted:#9aa4b2;
+    --accent:#3b82f6;
+    --accent-dark:#2563eb;
+    --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+    --success: #16a34a;
+    --danger: #ef4444;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(59,130,246,0.08), transparent 6%),
+                radial-gradient(1200px 600px at 90% 90%, rgba(99,102,241,0.04), transparent 6%),
+                var(--bg);
+    color:#e6eef8;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .app {
+    max-width:900px;
+    margin:36px auto 120px;
+    padding:28px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.02);
+    min-height:60vh;
+  }
+
+  header.title {
+    display:flex;
+    gap:18px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .flag {
+    font-size:36px;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5));
+  }
+  h1 {
+    margin:0;
+    font-size:20px;
+    letter-spacing:0.2px;
+    color: #eaf2ff;
+  }
+  h1 .sub { color:var(--muted); font-size:14px; display:block; margin-top:6px; }
+
+  .story {
+    margin-top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .cue {
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:12px;
+    border-radius:12px;
+    background: linear-gradient(180deg, var(--glass), var(--glass-2));
+    border:1px solid rgba(255,255,255,0.02);
+    box-shadow: 0 2px 12px rgba(2,6,23,0.5);
+    transition:transform .18s ease, box-shadow .18s;
+  }
+  .cue:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(2,6,23,0.6); }
+  .avatar {
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    flex-shrink:0;
+    display:grid;
+    place-items:center;
+    font-weight:700;
+    font-size:18px;
+    color:white;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .body {
+    flex:1;
+  }
+  .meta { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+  .speaker { font-weight:700; color:#dff0ff; }
+  .text { color: #e6eef8; line-height:1.45; white-space:pre-wrap; }
+  .muted { color:var(--muted); font-size:13px; }
+
+  .options {
+    margin-top:8px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .opt {
+    background: transparent;
+    border:1px solid rgba(255,255,255,0.06);
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition: all .12s;
+    color:#dff6ff;
+  }
+  .opt:hover { transform:translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+  .opt.removed {
+    opacity:0.16;
+    transform:scale(0.96);
+    pointer-events:none;
+    border-style:dashed;
+  }
+  .opt.correct {
+    border-color: rgba(22,163,74,0.9);
+    background: linear-gradient(90deg, rgba(22,163,74,0.12), rgba(22,163,74,0.04));
+    color: var(--success);
+  }
+
+  /* fixed bottom CTA */
+  .bottom {
+    position: fixed;
+    left:0;
+    right:0;
+    bottom:18px;
+    display:flex;
+    justify-content:center;
+    pointer-events:none;
+  }
+  .cta {
+    pointer-events:auto;
+    width:calc(100% - 48px);
+    max-width:900px;
+    height:64px;
+    border-radius:12px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-dark));
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    letter-spacing:0.4px;
+    font-size:18px;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 10px 30px rgba(37,99,235,0.18);
+    transition: transform .12s ease, opacity .12s ease, filter .12s;
+    cursor: pointer;
+  }
+  .cta.disabled {
+    opacity:0.44;
+    transform: translateY(4px);
+    background: linear-gradient(180deg, rgba(59,130,246,0.14), rgba(37,99,235,0.08));
+    border:1px solid rgba(255,255,255,0.02);
+    cursor: not-allowed;
+    box-shadow:none;
+  }
+  .cta:active { transform: translateY(2px) }
+  .status {
+    margin-left:12px;
+    font-size:13px;
+    opacity:0.95;
+    color: rgba(0,0,0,0.06);
+  }
+
+  /* end panel */
+  .end {
+    margin-top:18px;
+    padding:16px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.02);
+    display:none;
+    align-items:center;
+    gap:12px;
+  }
+  .end.show { display:flex; }
+
+  footer {
+    margin-top:20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  @media (max-width:640px){
+    .app { margin:18px 12px 140px; padding:18px; }
+    .avatar { width:44px; height:44px; }
+    .cta { height:58px; font-size:17px; }
+  }
+</style>
+</head>
+<body>
+  <main class="app" role="main" aria-live="polite">
+    <header class="title" aria-hidden="false">
+      <div class="flag" aria-hidden="true">🇵🇪</div>
+      <div>
+        <h1 id="story-title">Las maravillas del Perú <span class="sub">(Historia)</span></h1>
+        <div class="muted">Lee y escucha — haz clic en <strong>Siga adelante</strong> para avanzar.</div>
+      </div>
+    </header>
+
+    <section id="story" class="story" aria-atomic="true"></section>
+
+    <div id="end-panel" class="end" role="status" aria-live="polite">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:grid;place-items:center;font-weight:800;">✔</div>
+      <div>
+        <div style="font-weight:800">Gracias por jugar</div>
+        <div class="muted">Esperamos que hayas disfrutado el viaje por Perú.</div>
+      </div>
+    </div>
+
+    <footer>
+      Hecho con ❤️ — Voces generadas por el navegador (Speech Synthesis).
+    </footer>
+  </main>
+
+  <div class="bottom">
+    <button id="cta" class="cta" aria-live="polite" aria-disabled="false">Siga adelante</button>
+  </div>
+
+<script>
+/*
+  Duolingo-like story single-file app
+  - Uses Web Speech API for TTS
+  - Manages progression, MCQs (removes wrong answers), disables CTA while reading
+  - Chooses best-available Spanish voices
+*/
+
+(() => {
+  const storyContainer = document.getElementById('story');
+  const cta = document.getElementById('cta');
+  const endPanel = document.getElementById('end-panel');
+  const titleEl = document.getElementById('story-title');
+
+  // Story data: sequence of cues. For MCQs provide options and correctIndex (0-based)
+  const cues = [
+    { speaker: 'Narradora', role: 'narrator', text: 'Al llegar al aeropuerto de Lima, Sofía no podía contener su emoción. Había soñado durante años con visitar Perú, un país lleno de historia, cultura y paisajes impresionantes.' },
+    { speaker: 'Sofía', role: 'sofia', text: '—Por fin estoy aquí… No puedo creerlo.' },
+    { speaker: 'Narradora', role: 'narrator', text: 'En la salida la esperaban Martín, un guía turístico local, y Lucía, una historiadora especializada en civilizaciones andinas.' },
+    { speaker: 'Martín', role: 'martin', text: '—Bienvenida, Sofía. Es un placer recibirte. ¿Lista para descubrir las maravillas del Perú?' },
+    { speaker: 'Sofía', role: 'sofia', text: '—Más que lista. Llevo meses planificando este viaje.' },
+    { speaker: 'Lucía', role: 'lucia', text: '—Excelente. Empezaremos por Lima, luego viajaremos a Cusco y finalmente al Valle Sagrado de los Incas. Pero antes, necesitamos ____ algunos detalles del itinerario.', question: true,
+      options: ['resolver','resolverse','resolvernos'], correctIndex: 0 },
+    { speaker: 'Sofía', role: 'sofia', text: '—Perfecto. He leído que Lima tiene una gastronomía espectacular.' },
+    { speaker: 'Martín', role: 'martin', text: '—Así es. La cocina peruana es considerada una de las mejores del mundo. Esta noche cenaremos en un restaurante donde preparan ____ ceviche del país.', question: true,
+      options: ['el más auténtico','más auténtico','lo más auténtico'], correctIndex: 0 },
+    { speaker: 'Lucía', role: 'lucia', text: '—Y mañana temprano volaremos a Cusco. Allí la altitud puede afectar un poco. Es importante ____ bien hidratada y descansar.', question: true,
+      options: ['mantenerse','mantener','se mantiene'], correctIndex: 0 },
+    { speaker: 'Sofía', role: 'sofia', text: '—He oído hablar del mal de altura. Espero que no sea grave.' },
+    { speaker: 'Martín', role: 'martin', text: '—No te preocupes, suele ser leve. Cusco es una ciudad impresionante. Fue la capital del Imperio incaico, y aún conserva ____ encanto ancestral que la hace única.', question: true,
+      options: ['un','el','algún'], correctIndex: 0 },
+    { speaker: 'Lucía', role: 'lucia', text: '—Cuando lleguemos, visitaremos Qorikancha, el antiguo templo del Sol. Después iremos a Sacsayhuamán, una fortaleza construida con enormes bloques de piedra, tan perfectamente encajados que resulta imposible ____ una hoja entre ellos.', question: true,
+      options: ['meter','meterse','se meter'], correctIndex: 0 },
+    { speaker: 'Sofía', role: 'sofia', text: '—¡Qué increíble! ¿Y luego iremos a Machu Picchu?' },
+    { speaker: 'Martín', role: 'martin', text: '—Exactamente. Tomaremos el tren panorámico que atraviesa el valle. El viaje dura unas tres horas, pero cada minuto vale la pena. Cuando llegues a la ciudadela, entenderás por qué es considerada ____ maravillas del mundo moderno.', question: true,
+      options: ['entre las','de las','sobre las'], correctIndex: 1 },
+    { speaker: 'Lucía', role: 'lucia', text: '—Además, no olvides que Machu Picchu no solo es un lugar turístico; es también un sitio sagrado para muchas comunidades andinas. Su valor cultural ____ mucho más allá de la belleza natural.', question: true,
+      options: ['trasciende','trascendió','trascenderá'], correctIndex: 0 },
+    { speaker: 'Sofía', role: 'sofia', text: '—Estoy deseando aprender más sobre esa conexión espiritual.' },
+    { speaker: 'Martín', role: 'martin', text: '—Lo harás. Cada rincón del Perú tiene algo que contar. Desde las líneas de Nazca hasta el lago Titicaca, este país guarda secretos que solo quien escucha con atención puede ____.', question: true,
+      options: ['comprender','comprenda','comprendido'], correctIndex: 0 },
+    { speaker: 'Narradora', role: 'narrator', text: 'Sofía sonrió, sintiendo que su aventura apenas comenzaba. Perú le ofrecía no solo paisajes, sino también la promesa de un viaje interior, lleno de historia, respeto y asombro.' }
+  ];
+
+  // Track position and state
+  let index = -1;
+  let isReading = false;
+
+  // Voice mapping - will be filled when voices available
+  const voicesByRole = {
+    narrator: null,
+    sofia: null,
+    martin: null,
+    lucia: null,
+    default: null
+  };
+
+  // Utility: choose voice best matching language & gender hints
+  function pickVoices(voices) {
+    // prefer Spanish voices: es-ES, es-419, es-US, es
+    const spanish = voices.filter(v => /es(-|$|_)/i.test(v.lang) || /spanish/i.test(v.name) );
+    const esCandidates = spanish.length ? spanish : voices.filter(v => /en(-|$|_)/i.test(v.lang));
+
+    // Heuristic: pick some different voices (if available) for variety
+    voicesByRole.narrator = findVoice(esCandidates, ['female','F','Sonia','Google Español']) || esCandidates[0] || voices[0];
+    voicesByRole.sofia = findVoice(esCandidates, ['female','Sofia','Sofía','female2']) || esCandidates[1] || voicesByRole.narrator;
+    voicesByRole.martin = findVoice(esCandidates, ['male','Juan','Jorge','Diego']) || esCandidates[2] || voicesByRole.narrator;
+    voicesByRole.lucia = findVoice(esCandidates, ['female','Lucia','Lucía','female3']) || esCandidates[3] || voicesByRole.sofia;
+    voicesByRole.default = voicesByRole.narrator;
+  }
+
+  function findVoice(list, hints) {
+    for (const h of hints) {
+      const found = list.find(v => (v.name && v.name.toLowerCase().includes(h.toLowerCase())) || (v.lang && v.lang.toLowerCase().includes(h.toLowerCase())));
+      if (found) return found;
+    }
+    return null;
+  }
+
+  // Prepare voices (asynchronously)
+  let voicesReady = false;
+  function initVoices() {
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices() || [];
+    if (!voices.length) {
+      // voices may load later; wait for onvoiceschanged
+      return;
+    }
+    pickVoices(voices);
+    voicesReady = true;
+  }
+  window.speechSynthesis.onvoiceschanged = () => {
+    initVoices();
+  };
+  // call once in case voices available immediately
+  initVoices();
+
+  function speakLine(text, role = 'default', onStart=null, onEnd=null, rate = 1.0) {
+    if (!('speechSynthesis' in window)) {
+      console.warn('No speechSynthesis available');
+      if (onStart) onStart();
+      if (onEnd) setTimeout(onEnd, 800);
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(text);
+    // choose voice
+    const voice = voicesByRole[role] || voicesByRole.default;
+    if (voice) utter.voice = voice;
+    utter.lang = utter.voice && utter.voice.lang ? utter.voice.lang : 'es-ES';
+    utter.rate = rate;
+    utter.onstart = () => { if (onStart) onStart(); };
+    utter.onend = () => { if (onEnd) onEnd(); };
+    // safety: fallback timeout if onend not called
+    const fallback = setTimeout(() => {
+      // no-op if already ended, else call onEnd
+      if (isReading) {
+        isReading = false;
+        if (onEnd) onEnd();
+      }
+    }, Math.max(5000, text.length * 80));
+    utter.onend = () => { clearTimeout(fallback); if (onEnd) onEnd(); };
+    window.speechSynthesis.cancel(); // clear previous
+    window.speechSynthesis.speak(utter);
+  }
+
+  // Render a cue to DOM
+  function renderCue(cueObj) {
+    const el = document.createElement('article');
+    el.className = 'cue';
+    el.setAttribute('data-role', cueObj.role || 'narrator');
+    el.innerHTML = `
+      <div class="avatar" aria-hidden="true">${cueObj.speaker[0] || '?'}</div>
+      <div class="body">
+        <div class="meta"><div class="speaker">${cueObj.speaker}</div></div>
+        <div class="text" aria-live="polite">${cueObj.text.replace('____','<u style="color:var(--accent)"><strong>____</strong></u>')}</div>
+      </div>
+    `;
+    storyContainer.appendChild(el);
+    // scroll to bottom so new cue visible
+    setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
+    return el;
+  }
+
+  // Render MCQ
+  function renderOptions(containerEl, cueObj) {
+    const optWrap = document.createElement('div');
+    optWrap.className = 'options';
+    cueObj.options.forEach((optText, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt';
+      btn.type = 'button';
+      btn.textContent = String.fromCharCode(97 + i) + ') ' + optText;
+      btn.dataset.index = i;
+      optWrap.appendChild(btn);
+
+      btn.addEventListener('click', (ev) => {
+        const idx = Number(btn.dataset.index);
+        if (idx === cueObj.correctIndex) {
+          // correct
+          btn.classList.add('correct');
+          // remove other buttons visually (disable)
+          Array.from(optWrap.children).forEach(ch => {
+            if (ch !== btn) { ch.classList.add('removed'); ch.disabled = true; }
+          });
+          // enable CTA after brief confirmation voice
+          speakLine('Correcto.', 'narrator', () => {
+            // keep reading state true until speech ends
+            isReading = true;
+            setCTA(false);
+            btn.focus();
+          }, () => {
+            isReading = false;
+            setCTA(true);
+          }, 1.0);
+        } else {
+          // wrong: eliminate itself
+          btn.classList.add('removed');
+          btn.disabled = true;
+          // short negative beep/utter
+          speakLine('No.', 'narrator', () => {
+            isReading = true;
+            setCTA(false);
+          }, () => {
+            isReading = false;
+            // CTA remains disabled until correct chosen
+            setCTA(false);
+          }, 1.1);
+        }
+      });
+    });
+    containerEl.querySelector('.body').appendChild(optWrap);
+  }
+
+  function setCTA(enabled) {
+    if (enabled) {
+      cta.classList.remove('disabled');
+      cta.setAttribute('aria-disabled','false');
+    } else {
+      cta.classList.add('disabled');
+      cta.setAttribute('aria-disabled','true');
+    }
+  }
+
+  // initial state: CTA enabled after title read? The title must be read automatically on load, and CTA becomes available only after the title has been read.
+  // So we start CTA disabled until title speech ends.
+  setCTA(false);
+
+  // Read title on load
+  function autoReadTitle() {
+    const titleText = 'Las maravillas del Perú';
+    // Wait for voices ready a little: if not ready, proceed anyway with fallback
+    setTimeout(() => {
+      speakLine(titleText, 'narrator', () => {
+        isReading = true;
+        setCTA(false);
+      }, () => {
+        isReading = false;
+        setCTA(true);
+      }, 0.95);
+    }, 250);
+  }
+  // Kick off title reading
+  autoReadTitle();
+
+  // CTA click handler: reveal next cue if not reading and button enabled
+  cta.addEventListener('click', (e) => {
+    if (cta.classList.contains('disabled') || isReading) return;
+    advance();
+  });
+
+  // advance to next cue (append and read it)
+  function advance() {
+    index++;
+    if (index >= cues.length) {
+      // finished — show end
+      showEnd();
+      return;
+    }
+    const cue = cues[index];
+    // render
+    const el = renderCue(cue);
+
+    // if it's a question, render options and keep CTA disabled until correct selected
+    if (cue.question) {
+      // read the cue text first automatically, then keep CTA disabled until correct
+      isReading = true;
+      setCTA(false);
+      speakLine(`${cue.speaker}: ${cue.text.replace('____','...')}`, cue.role, () => {
+        // onstart
+        isReading = true;
+        setCTA(false);
+      }, () => {
+        // onend: still disabled, require correct answer
+        isReading = false;
+        setCTA(false);
+      }, 1.0);
+      renderOptions(el, cue);
+    } else {
+      // normal cue: read then enable CTA when finished
+      isReading = true;
+      setCTA(false);
+      speakLine(`${cue.speaker}: ${cue.text}`, cue.role, () => {
+        isReading = true;
+        setCTA(false);
+      }, () => {
+        isReading = false;
+        // after reading a normal line, enable CTA (unless that cue is the final one)
+        if (index === cues.length - 1) {
+          // last one: finish, show end after small pause
+          setTimeout(() => {
+            showEnd();
+          }, 650);
+        } else {
+          setCTA(true);
+        }
+      }, 1.0);
+    }
+  }
+
+  function showEnd() {
+    // Speak thank you
+    isReading = true;
+    setCTA(false);
+    endPanel.classList.add('show');
+    speakLine('Gracias por jugar.', 'narrator', () => {
+      isReading = true;
+      setCTA(false);
+    }, () => {
+      isReading = false;
+      setCTA(false);
+    }, 1.0);
+  }
+
+  // Accessibility: allow pressing Enter/Space on CTA when enabled
+  cta.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !cta.classList.contains('disabled')) {
+      e.preventDefault();
+      advance();
+    }
+  });
+
+  // optional: also allow keyboard to advance when CTA enabled by pressing ArrowRight
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'ArrowRight' || e.key === 'PageDown') && !cta.classList.contains('disabled')) {
+      advance();
+    }
+  });
+
+  // Small UX: focus CTA by default
+  cta.focus();
+
+  // If voices not yet loaded, attempt later to pick better voices when available
+  setTimeout(() => {
+    if (!voicesReady) {
+      const tryVoices = () => {
+        const v = window.speechSynthesis.getVoices();
+        if (v && v.length) {
+          pickVoices(v);
+        }
+      };
+      tryVoices();
+      window.speechSynthesis.onvoiceschanged = tryVoices;
+    }
+  }, 900);
+
+})();
+</script>
+</body>
+</html>
