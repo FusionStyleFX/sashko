@@ -73,8 +73,13 @@
       </div>
       
       <div class="toolbar">
-  <div class="muted"> Искаш пример с тази дума? Кликни <a id="youglish-link" href="#" target="_blank">ТУК!</a> </div>
+  <div class="muted"> Искаш пример с тази дума? Кликни <a id="youglish-link" href="#" target="_blank">ТУК</a>!</div>
 </div>
+
+  <div class="muted">
+    Искаш пълен обзор на думата? Кликни <a id="explain-link" href="#" target="_blank">ТУК</a>!
+  </div>
+
       
     </div>
   </div>
@@ -483,23 +488,25 @@ function render(){
   if(isSpanishFront){
     $('front-word').textContent = card.es;
     $('back-word').textContent = card.bg;
-    
-    // Update YouGlish link
     $('youglish-link').href = `https://youglish.com/pronounce/${encodeURIComponent(card.es)}/spanish`;
   } else {
     $('front-word').textContent = card.bg;
     $('back-word').textContent = card.es;
-    
-    // Update YouGlish link to Spanish word anyway
     $('youglish-link').href = `https://youglish.com/pronounce/${encodeURIComponent(card.es)}/spanish`;
   }
-  
+
+  // NEW: build the Spanish command for Google
+  const command = `¿Qué significa «${card.es}»? Enumera sus posibles significados y da 10 ejemplos con ella. Consulta diccionarios como PONS «inglés-español», PONS «español-búlgaro», Cambridge Dictionary «inglés-español», y si existen colocaciones u otras formas en que se puede combinar o formular la palabra o expresión, enuméralas también. Sugiere además cómo puedo recordarla eficazmente (usando un modismo u otro método).`;
+
+  $('explain-link').href = `https://www.google.com/search?udm=50&q=${encodeURIComponent(command)}`;
+
   $('part-front').textContent = card.part || '';
   $('part-back').textContent = card.part || '';
   $('progress').textContent = `${index+1} / ${deck.length}`;
   $('card').classList.remove('is-flipped');
   $('card').setAttribute('aria-pressed','false');
 }
+
 
 
     // controls
